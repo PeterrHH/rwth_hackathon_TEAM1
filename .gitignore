@@ -1,0 +1,7 @@
+processed/
+__pycache__/
+.ipynb_checkpoints/
+.venv/
+.DS_Store
+cache/
+results/predictions/
