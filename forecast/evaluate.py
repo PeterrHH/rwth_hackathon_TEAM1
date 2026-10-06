@@ -17,13 +17,12 @@ RANK_BY = "portfolio_15min_nMAE"
 
 
 def score(actual: pd.Series, pred: pd.Series) -> dict:
-    """error = forecast - actual. bias > 0: forecast too high (over-buying)."""
+    """nMAE %: mean absolute error relative to mean consumption (lower is better).
+    R2: share of the variation in consumption the forecast explains (1 = perfect, 0 = as good as the mean)."""
     err = pred - actual
     return {
-        "MAE": err.abs().mean(),
-        "RMSE": np.sqrt((err ** 2).mean()),
-        "nMAE": 100 * err.abs().mean() / actual.mean(),
-        "bias": 100 * err.sum() / actual.sum(),
+        "nMAE": float(100 * err.abs().mean() / actual.mean()),
+        "R2": float(1 - (err ** 2).sum() / ((actual - actual.mean()) ** 2).sum()),
     }
 
 
@@ -43,7 +42,7 @@ def _attach(predictions: pd.DataFrame) -> pd.DataFrame:
 
 
 def evaluate(predictions: pd.DataFrame) -> pd.DataFrame:
-    """Scores at four levels (rows) x MAE / RMSE / nMAE % / bias % (columns).
+    """Scores at four levels (rows) x nMAE % / R2 (columns).
 
     portfolio = sum over all households (what is bought); day = sum per local day, counting
     only complete household-days (>= COMPLETE_DAY_READINGS readings).
@@ -72,7 +71,7 @@ def submit(predictions: pd.DataFrame, name: str, author: str, description: str,
            "description": description}
     for lvl in LEVELS:
         row[f"{lvl}_nMAE"] = round(float(scores.loc[lvl, "nMAE"]), 2)
-        row[f"{lvl}_bias"] = round(float(scores.loc[lvl, "bias"]), 2)
+        row[f"{lvl}_R2"] = round(float(scores.loc[lvl, "R2"]), 3)
     row["config"] = json.dumps(config or {})
     row["params"] = json.dumps(params or {}, default=str)
 

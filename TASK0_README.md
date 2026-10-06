@@ -88,10 +88,9 @@ The config is stored with every submission.
    Daily levels count only **complete household-days** (≥ 92 readings: 96 per day, 92 or 100 on daylight-saving days), and prediction and actual are summed over the same readings.
 
 3. **Metrics** (error = forecast − actual):
-   - **MAE**, **RMSE** in kWh.
-   - **nMAE %** = MAE / mean actual. Comparable across levels, and the leaderboard number.
-   - **bias %** = Σ error / Σ actual. Above 0 means over-buying, below 0 under-buying.
-4. **Saves** the predictions to `results/predictions/<name>.npy` and adds (or replaces) the row `<name>` in `results/leaderboard.csv`, together with nMAE and bias for every level, the config and the model parameters.
+   - **nMAE %** = mean |error| / mean actual × 100. The average size of the error relative to consumption; lower is better. Comparable across levels, and the ranking number.
+   - **R²** = 1 − Σ error² / Σ (actual − mean actual)². The share of the variation in consumption that the forecast explains: 1 is perfect, 0 is no better than always predicting the average.
+4. **Saves** the predictions to `results/predictions/<name>.npy` and adds (or replaces) the row `<name>` in `results/leaderboard.csv`, together with nMAE and R² for every level, the config and the model parameters.
 
 Other helpers:
 - `evaluate.evaluate(predictions)` scores without saving.
@@ -116,16 +115,20 @@ Other helpers:
 
 ## 6. Current leaderboard (2026-10-06)
 
-| name | model | portfolio 15 min nMAE | portfolio day nMAE | bias (15 min) |
-|---|---|---|---|---|
-| `gbm_step` | gradient boosting, `step` weather | **11.64 %** | **7.79 %** | +0.86 % |
-| `gbm_interpolate` | gradient boosting, `interpolate` weather | 11.68 % | 7.84 % | +0.82 % |
-| `naive_lag_1d` | same 15 min yesterday | 13.41 % | 7.90 % | +0.28 % |
-| `linear_example` | linear regression (template example) | 13.43 % | 8.74 % | +2.23 % |
-| `naive_lag_7d` | same 15 min a week ago | 20.45 % | 16.92 % | +0.60 % |
+| name | model | portfolio 15 min nMAE | portfolio 15 min R² | portfolio day nMAE | portfolio day R² |
+|---|---|---|---|---|---|
+| `gbm_step` | gradient boosting, `step` weather | **11.61 %** | **0.904** | 7.82 % | 0.942 |
+| `gbm_interpolate` | gradient boosting, `interpolate` weather | 11.68 % | 0.903 | 7.84 % | 0.943 |
+| `ensemble_gbm_step_sarimax_step` | 50/50 average of gbm_step and sarimax_step | 11.77 % | 0.900 | **7.38 %** | **0.949** |
+| `sarimax_step` | SARIMAX on daily portfolio, distributed via yesterday's profile (`train.ipynb`) | 13.12 % | 0.876 | 7.40 % | 0.948 |
+| `naive_lag_1d` | same 15 min yesterday | 13.41 % | 0.869 | 7.90 % | 0.939 |
+| `linear_example` | linear regression (template example) | 13.43 % | 0.878 | 8.74 % | 0.930 |
+| `naive_lag_7d` | same 15 min a week ago | 20.45 % | 0.680 | 16.92 % | 0.718 |
 
 **Reading:**
 - Gradient boosting beats yesterday's load clearly per 15 min (11.6 vs 13.4 %), but on **daily totals only barely** (7.8 vs 7.9 %). Yesterday's total is already a strong guess for today's, and without a weather forecast for day D the model reacts to weather changes about a day late, as the chart in `task0_baseline.ipynb` shows.
+- SARIMAX is the best single model for daily totals; the ensemble with gradient boosting is best per day overall.
+- Per household and 15 min, R² shows the biggest difference: gradient boosting 0.42, yesterday's value 0.02. A single heat pump's timing is hard to repeat, but the model learns its typical pattern.
 - Weather interpolation makes no difference with yesterday's weather.
 - The reference model (`task0_baseline.ipynb`):
 
