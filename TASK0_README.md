@@ -152,3 +152,7 @@ Other helpers:
    - per-household scaling;
    - PV / no-PV or clustered models (Level 1);
    - quantile models for uncertainty (Level 3).
+
+### Level 3 · Uncertainty and procurement decisions
+
+A Level 3 extension adds a probabilistic forecast instead of only a point prediction. Using a quantile gradient-boosting model, the notebook estimates predictive intervals (for example, the 10th/50th/90th percentiles) and checks calibration via interval coverage and mean width. This can be used to reason about day-ahead procurement: buy a quantity near the median forecast for expected demand, or more conservatively around a higher quantile when shortfall is costly. In the reference notebook, the procurement heuristic compares `q50` and `q75` under a simple shortfall-vs-surplus cost ratio; this is a useful decision example, but the real market decision should be based on actual day-ahead and imbalance prices.
