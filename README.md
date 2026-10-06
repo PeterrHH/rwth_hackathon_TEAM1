@@ -135,3 +135,39 @@ We expect participants to stay in touch with the mentors throughout the day and 
 We are open to your questions and hope to provide as much support as possible to you given your motivation and dedication to the challenge topic.
 Given the one-day format, pick a scope you can realistically finish rather than one you can only start — a small, complete solution beats a big, unfinished one.
 Have fun and happy hacking!
+
+## First model: active-learning day-ahead forecast
+
+`models/active_day_ahead.py` implements a first end-to-end model inspired by
+*Enhanced spatio-temporal electric load forecasts using less data with active
+deep learning*. It predicts all 96 quarter-hour loads for the next day from:
+
+- the household's complete previous-day load profile;
+- calendar signals and household/PV metadata; and
+- daily summaries of the target day's weather (treated as the day-ahead
+  weather forecast available at procurement time).
+
+The newest days of every household are held out before any model fitting or
+active selection. From the older training pool, the model starts with a small
+chronological seed. It embeds remaining candidate days with its hidden layer,
+clusters those embeddings, and adds the candidate furthest from each cluster
+centre (`max d_c`) in successive batches. This retains the paper's central
+diversity/embedding-uncertainty idea while keeping the hackathon version small
+and runnable with scikit-learn.
+
+Run a quick experiment from this folder:
+
+```powershell
+poetry run python -m models.active_day_ahead --max-households 10 --max-iter 40
+```
+
+Run the default 30-household experiment:
+
+```powershell
+poetry run python -m models.active_day_ahead
+```
+
+Outputs are written to `outputs/active_day_ahead/`: the fitted pipeline,
+metrics versus a previous-day seasonal baseline, selected training days, and
+test predictions. Increase `--budget-fraction` toward `1` for accuracy or lower
+it to test how much labelled/training data active selection can save.

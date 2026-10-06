@@ -1,0 +1,30 @@
+{
+  "config": {
+    "data_dir": "C:\\Users\\13717\\Desktop\\26Fall\\Jara energy school\\rwth_hackathon\\data",
+    "output_dir": "C:\\Users\\13717\\Desktop\\26Fall\\Jara energy school\\rwth_hackathon\\outputs\\active_day_ahead",
+    "max_households": 10,
+    "test_days": 28,
+    "initial_fraction": 0.1,
+    "budget_fraction": 0.35,
+    "active_iterations": 4,
+    "hidden_units": 64,
+    "max_iter": 40,
+    "random_seed": 42
+  },
+  "samples": {
+    "all": 6721,
+    "train_pool": 6441,
+    "selected": 2255,
+    "test": 280
+  },
+  "active_model": {
+    "mae_kwh_per_15min": 0.29626491504617675,
+    "rmse_kwh_per_15min": 0.4194723572034206,
+    "wape": 0.6784031427076687
+  },
+  "previous_day_baseline": {
+    "mae_kwh_per_15min": 0.3258489211605153,
+    "rmse_kwh_per_15min": 0.5281394784839015,
+    "wape": 0.7461461716745714
+  }
+}
