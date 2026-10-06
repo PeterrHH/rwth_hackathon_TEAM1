@@ -17,10 +17,13 @@ RANK_BY = "portfolio_15min_nMAE"
 
 
 def score(actual: pd.Series, pred: pd.Series) -> dict:
-    """nMAE %: mean absolute error relative to mean consumption (lower is better).
+    """MAE / RMSE: mean absolute / root-mean-square error in kWh (unit of the level; lower is better).
+    nMAE %: MAE relative to mean consumption, comparable across levels (the leaderboard metric).
     R2: share of the variation in consumption the forecast explains (1 = perfect, 0 = as good as the mean)."""
     err = pred - actual
     return {
+        "MAE": float(err.abs().mean()),
+        "RMSE": float(np.sqrt((err ** 2).mean())),
         "nMAE": float(100 * err.abs().mean() / actual.mean()),
         "R2": float(1 - (err ** 2).sum() / ((actual - actual.mean()) ** 2).sum()),
     }

@@ -68,7 +68,10 @@ def random_candidates(n: int, seed: int = 0, base: dict | None = None) -> list[d
 
 def tune(fit_rows: pd.DataFrame, val_rows: pd.DataFrame, candidates: list[dict],
          features: list[str]) -> pd.DataFrame:
-    """Fit every candidate on fit_rows, score on val_rows; best (lowest portfolio_15min nMAE) first."""
+    """Fit every candidate on fit_rows, score on val_rows; best (lowest portfolio_15min MAE) first.
+
+    On one fixed validation set, ranking by MAE and by nMAE is identical (nMAE = MAE / constant).
+    """
     results = []
     for i, params in enumerate(candidates):
         t = time.time()
@@ -76,13 +79,14 @@ def tune(fit_rows: pd.DataFrame, val_rows: pd.DataFrame, candidates: list[dict],
         scores = score_rows(val_rows, model.predict(val_rows[features]).clip(min=0))
         results.append({
             "candidate": i,
-            "portfolio_15min_nMAE": scores.loc["portfolio_15min", "nMAE"],
+            "portfolio_15min_MAE": scores.loc["portfolio_15min", "MAE"],
+            "portfolio_15min_RMSE": scores.loc["portfolio_15min", "RMSE"],
             "portfolio_15min_R2": scores.loc["portfolio_15min", "R2"],
-            "portfolio_day_nMAE": scores.loc["portfolio_day", "nMAE"],
+            "portfolio_day_MAE": scores.loc["portfolio_day", "MAE"],
             "household_15min_R2": scores.loc["household_15min", "R2"],
             "fit_seconds": round(time.time() - t, 1),
             "params": params,
         })
-        print(f"candidate {i:2d}: portfolio 15-min nMAE {results[-1]['portfolio_15min_nMAE']:.2f} % "
+        print(f"candidate {i:2d}: portfolio 15-min MAE {results[-1]['portfolio_15min_MAE']:.2f} kWh "
               f"({results[-1]['fit_seconds']} s)")
-    return pd.DataFrame(results).sort_values("portfolio_15min_nMAE").reset_index(drop=True)
+    return pd.DataFrame(results).sort_values("portfolio_15min_MAE").reset_index(drop=True)

@@ -38,12 +38,12 @@ def add_lag(df: pd.DataFrame, source: pd.DataFrame, cols: list[str], days: int,
     return out
 
 
-def build_features(config: Config) -> pd.DataFrame:
-    """All cleaned readings (train and test) with the standard features.
+def build_features(config: Config) -> tuple[pd.DataFrame, list[int]]:
+    """All cleaned readings (train and test) with the standard features, plus the loaded household IDs.
 
     Extra columns: kwh (target), is_test, date (local delivery day), day_start.
     """
-    load = data.load_clean()
+    load, list_household_id = data.load_clean()
     df = load.merge(data.read_households(), on="Household_ID", how="left")
 
     local = df["Timestamp"].dt.tz_convert(LOCAL_TZ)
@@ -66,7 +66,7 @@ def build_features(config: Config) -> pd.DataFrame:
     df = add_lag(df, w, [c.removesuffix("_1d") for c in WEATHER_FEATURES], 1, key="Weather_ID", suffix="_1d")
 
     df["is_test"] = df["Timestamp"] >= TEST_START
-    return df
+    return df, list_household_id
 
 
 def split(df: pd.DataFrame, config: Config) -> tuple[pd.DataFrame, pd.DataFrame]:

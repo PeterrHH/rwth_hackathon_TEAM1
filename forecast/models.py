@@ -48,7 +48,7 @@ MIN_HOUSEHOLDS = 30  # training starts once this many households report on a day
 
 def portfolio_daily() -> pd.DataFrame:
     """Per local day: mean consumption per reporting household (kWh/day) and number of households."""
-    load = data.load_clean()
+    load, _ = data.load_clean()
     day = load["Timestamp"].dt.tz_convert(LOCAL_TZ).dt.date
     daily = load.groupby(day).agg(kwh_mean=("kwh", "mean"), households=("Household_ID", "nunique"))
     daily["y"] = daily["kwh_mean"] * 96
@@ -62,7 +62,7 @@ def portfolio_temperature(config: Config) -> pd.Series:
     w["date"] = w["Timestamp"].dt.tz_convert(LOCAL_TZ).dt.tz_localize(None).dt.normalize()
     per_station = w.groupby(["date", "Weather_ID"])["temperature"].mean().unstack()
     households = data.read_households()
-    households = households[households["Household_ID"].isin(data.load_clean()["Household_ID"].unique())]
+    households = households[households["Household_ID"].isin(data.load_clean()[1])]
     weights = households["Weather_ID"].value_counts().reindex(per_station.columns).fillna(0)
     available = per_station.notna()
     temperature = (per_station.fillna(0) * weights).sum(axis=1) / (available * weights).sum(axis=1)
